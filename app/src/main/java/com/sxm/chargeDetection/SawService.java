@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -23,7 +24,7 @@ public class SawService extends Service {
     private static int x = 0, y = 0;
     private static long time = 0;
     private Thread thread;
-    private int tempX, tempY;
+    private static int tempX = 0, tempY = 0;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -73,7 +74,7 @@ public class SawService extends Service {
 
         //窗口的左上角坐标
         params.x = x;
-        params.y = x;
+        params.y = y;
 
         //设置窗口的宽高,这里为自动
         params.width = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -83,6 +84,7 @@ public class SawService extends Service {
         ((View) tv).setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                int diffX = tempX - upX, diffY = tempY - upY;
                 switch (event.getActionMasked()) {
                     case MotionEvent.ACTION_DOWN:
                         upX = (int) event.getRawX();
@@ -92,9 +94,10 @@ public class SawService extends Service {
                     case MotionEvent.ACTION_MOVE:
                         // 与上一次位置相差不到5则不移动
 //                        if (event.getRawX() - upX > 5 || event.getRawY() - upY > 5) {
-                        x = params.x = ((int) event.getRawX()) - 160;
-                        y = params.y = ((int) event.getRawY()) - 140;
+                        x = params.x = ((int) event.getRawX()) + diffX;
+                        y = params.y = ((int) event.getRawY()) + diffY;
                         wm.updateViewLayout(tv, params);
+//                        Log.d("ACTION_MOVE", x + "\t" + y);
 //                        }
                         break;
                     case MotionEvent.ACTION_UP:
@@ -104,6 +107,12 @@ public class SawService extends Service {
                         if (time2 - time < 250) stopSelf();
                         time = time2;
 //                        }
+                        DisplayMetrics dm = getResources().getDisplayMetrics();
+                        tempX = Math.max((int) event.getRawX() + diffX, 0);
+                        tempY = Math.max((int) event.getRawY() + diffY, 0);
+                        tempX = Math.min(tempX, dm.widthPixels - tv.getWidth());
+                        tempY = Math.min(tempY, dm.heightPixels - tv.getHeight());
+                        Log.d("ACTION_UP", "upX:" + tempX + " upY:" + tempY);
                         break;
                 }
                 return false;
