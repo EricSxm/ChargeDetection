@@ -89,6 +89,9 @@ public class SawService extends Service {
                     case MotionEvent.ACTION_DOWN:
                         upX = (int) event.getRawX();
                         upY = (int) event.getRawY();
+                        DisplayMetrics dm = getResources().getDisplayMetrics();
+                        tempX = Math.min(tempX, dm.widthPixels - tv.getWidth());
+                        tempY = Math.min(tempY, dm.heightPixels - tv.getHeight());
                         Log.d("ACTION_DOWN", "downX:" + upX + " downY:" + upY);
                         break;
                     case MotionEvent.ACTION_MOVE:
@@ -107,11 +110,8 @@ public class SawService extends Service {
                         if (time2 - time < 250) stopSelf();
                         time = time2;
 //                        }
-                        DisplayMetrics dm = getResources().getDisplayMetrics();
                         tempX = Math.max((int) event.getRawX() + diffX, 0);
                         tempY = Math.max((int) event.getRawY() + diffY, 0);
-                        tempX = Math.min(tempX, dm.widthPixels - tv.getWidth());
-                        tempY = Math.min(tempY, dm.heightPixels - tv.getHeight());
                         Log.d("ACTION_UP", "upX:" + tempX + " upY:" + tempY);
                         break;
                 }
